@@ -4,4 +4,4 @@ sqlalchemy
 pydantic
 python-dotenv
 passlib[bcrypt]
-psycopg2-binarypython
+psycopg2-binary
