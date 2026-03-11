@@ -1,9 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Register = () => {
   return (
     <div className="vh-100 d-flex flex-column bg-light">
-      
+
       {/* Header */}
       <div className="p-3">
         <h5>
@@ -21,7 +22,6 @@ const Register = () => {
             Sign up to continue
           </p>
 
-          {/* Form */}
           <form>
             <div className="mb-4">
               <input
@@ -44,15 +44,13 @@ const Register = () => {
                 type="password"
                 className="form-control border-0 border-bottom rounded-0"
                 placeholder="Password"
-              />
+            />
             </div>
 
-            {/* Button */}
             <button className="btn btn-primary w-100 mb-3">
               Sign up
             </button>
 
-            {/* Checkbox */}
             <div className="form-check mb-4">
               <input
                 className="form-check-input"
@@ -65,15 +63,16 @@ const Register = () => {
               </label>
             </div>
 
-            {/* Divider */}
             <div className="text-center text-muted mb-3">
               <hr />
-              <small className="position-relative px-2" style={{ top: "-22px", background: "#fff" }}>
+              <small
+                className="position-relative px-2"
+                style={{ top: "-22px", background: "#fff" }}
+              >
                 ACCESS QUICKLY
               </small>
             </div>
 
-            {/* Social Buttons */}
             <div className="d-flex justify-content-between">
               <button type="button" className="btn btn-outline-primary w-30">
                 Google
@@ -93,7 +92,9 @@ const Register = () => {
       <div className="text-center mb-3">
         <span className="text-muted">
           Already have an account?{" "}
-          <a href="/login">Sign in</a>
+          <Link to="/" style={{ textDecoration: "none" }}>
+            Sign in
+          </Link>
         </span>
       </div>
     </div>
