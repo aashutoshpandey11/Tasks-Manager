@@ -12,7 +12,7 @@ const Login = () => {
         style={{ width: "350px", borderRadius: "10px" }}
       >
         <h4 className="text-center mb-2" style={{ color: "#2f8f2f" }}>
-          GeeksforGeeks
+          Good to see you again
         </h4>
 
         <p className="text-center text-muted mb-4">
