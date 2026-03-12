@@ -19,7 +19,7 @@ const Register = () => {
           
           <h2 className="text-center mb-1">Sign up</h2>
           <p className="text-center text-muted mb-4">
-            Sign up to continue
+            Create Your Account
           </p>
 
           <form>
