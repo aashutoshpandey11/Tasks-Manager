@@ -1,9 +1,15 @@
 import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Dashboard = () => {
-  // Example username (later from backend)
-  const [username] = useState("Ashutosh");
+  // Get username from localStorage
+  const username = localStorage.getItem("user");
+
+  // Protect dashboard: redirect to login if no user
+  if (!username) {
+    return <Navigate to="/" />;
+  }
 
   // Task state
   const [tasks, setTasks] = useState([]);
