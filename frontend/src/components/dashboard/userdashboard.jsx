@@ -3,15 +3,11 @@ import { Navigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Dashboard = () => {
-  // Get username from localStorage
   const username = localStorage.getItem("user");
-
-  // Protect dashboard: redirect to login if no user
   if (!username) {
     return <Navigate to="/" />;
   }
 
-  // Task state
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState({
     title: "",
@@ -19,6 +15,7 @@ const Dashboard = () => {
     priority: "Medium",
     dueDate: ""
   });
+  const [editIndex, setEditIndex] = useState(null); // track edit
 
   // Handle input change
   const handleChange = (e) => {
@@ -28,11 +25,20 @@ const Dashboard = () => {
     });
   };
 
-  // Add task
-  const handleAddTask = () => {
+  // Add or update task
+  const handleAddOrUpdateTask = () => {
     if (taskInput.title === "") return;
 
-    setTasks([...tasks, taskInput]);
+    if (editIndex !== null) {
+      // Update existing task
+      const updatedTasks = [...tasks];
+      updatedTasks[editIndex] = taskInput;
+      setTasks(updatedTasks);
+      setEditIndex(null); // reset edit mode
+    } else {
+      // Add new task
+      setTasks([...tasks, taskInput]);
+    }
 
     setTaskInput({
       title: "",
@@ -46,20 +52,34 @@ const Dashboard = () => {
   const handleDelete = (index) => {
     const updated = tasks.filter((_, i) => i !== index);
     setTasks(updated);
+    // If deleting the task currently being edited
+    if (editIndex === index) {
+      setTaskInput({
+        title: "",
+        status: "Pending",
+        priority: "Medium",
+        dueDate: ""
+      });
+      setEditIndex(null);
+    }
+  };
+
+  // Edit task
+  const handleEdit = (index) => {
+    setTaskInput(tasks[index]);
+    setEditIndex(index);
   };
 
   return (
     <div className="container mt-5">
-
-      {/* Welcome Section */}
       <div className="text-center mb-4">
         <h2>Welcome to the Dashboard</h2>
         <h5 className="text-muted">Hello, {username} 👋</h5>
       </div>
 
-      {/* Create Task Section */}
+      {/* Create / Edit Task Section */}
       <div className="card p-4 shadow-sm mb-4">
-        <h5 className="mb-3">Create Task</h5>
+        <h5 className="mb-3">{editIndex !== null ? "Edit Task" : "Create Task"}</h5>
 
         <div className="row g-3">
           <div className="col-md-3">
@@ -111,10 +131,10 @@ const Dashboard = () => {
 
           <div className="col-md-2">
             <button
-              onClick={handleAddTask}
-              className="btn btn-success w-100"
+              onClick={handleAddOrUpdateTask}
+              className={`btn ${editIndex !== null ? "btn-warning" : "btn-success"} w-100`}
             >
-              Create Task
+              {editIndex !== null ? "Update Task" : "Create Task"}
             </button>
           </div>
         </div>
@@ -148,6 +168,12 @@ const Dashboard = () => {
                   <td>{task.priority}</td>
                   <td>{task.dueDate || "N/A"}</td>
                   <td>
+                    <button
+                      className="btn btn-primary btn-sm me-2"
+                      onClick={() => handleEdit(index)}
+                    >
+                      Edit
+                    </button>
                     <button
                       className="btn btn-danger btn-sm"
                       onClick={() => handleDelete(index)}
