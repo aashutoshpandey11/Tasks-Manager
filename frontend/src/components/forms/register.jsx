@@ -1,7 +1,25 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
+  const navigate = useNavigate(); // for redirect
+
+  const handleRegister = (e) => {
+    e.preventDefault(); // prevent page reload
+
+    // Get form values
+    const username = e.target.username.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    // Normally, you'd send this data to your backend
+    // For now, just store username in localStorage
+    localStorage.setItem("user", username);
+
+    // Redirect to dashboard
+    navigate("/dashboard");
+  };
+
   return (
     <div className="vh-100 d-flex flex-column bg-light">
 
@@ -22,32 +40,39 @@ const Register = () => {
             Create Your Account
           </p>
 
-          <form>
+          {/* Updated form with onSubmit */}
+          <form onSubmit={handleRegister}>
             <div className="mb-4">
               <input
                 type="text"
+                name="username" // added name for form access
                 className="form-control border-0 border-bottom rounded-0"
                 placeholder="Name"
+                required
               />
             </div>
 
             <div className="mb-4">
               <input
                 type="email"
+                name="email" // added name for form access
                 className="form-control border-0 border-bottom rounded-0"
                 placeholder="Email"
+                required
               />
             </div>
 
             <div className="mb-4">
               <input
                 type="password"
+                name="password" // added name for form access
                 className="form-control border-0 border-bottom rounded-0"
                 placeholder="Password"
-            />
+                required
+              />
             </div>
 
-            <button className="btn btn-primary w-100 mb-3">
+            <button type="submit" className="btn btn-primary w-100 mb-3">
               Sign up
             </button>
 
