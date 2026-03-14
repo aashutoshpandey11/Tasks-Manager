@@ -1,8 +1,25 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate(); // for redirect
+
+  const handleLogin = (e) => {
+    e.preventDefault(); // prevent page reload
+
+    // Get form values
+    const username = e.target.username.value;
+    const password = e.target.password.value;
+
+    // Normally, you'd validate login via backend
+    // For now, just store username in localStorage
+    localStorage.setItem("user", username);
+
+    // Redirect to dashboard
+    navigate("/dashboard");
+  };
+
   return (
     <div
       className="d-flex justify-content-center align-items-center vh-100"
@@ -20,13 +37,16 @@ const Login = () => {
           Enter your login credentials
         </p>
 
-        <form>
+        {/* Updated form with onSubmit */}
+        <form onSubmit={handleLogin}>
           <div className="mb-3">
             <label className="form-label">Username:</label>
             <input
               type="text"
+              name="username" // added name for form access
               className="form-control"
               placeholder="Enter your Username"
+              required
             />
           </div>
 
@@ -34,8 +54,10 @@ const Login = () => {
             <label className="form-label">Password:</label>
             <input
               type="password"
+              name="password" // added name for form access
               className="form-control"
               placeholder="Enter your Password"
+              required
             />
           </div>
 
