@@ -6,5 +6,6 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    description = Column(String)
-    completed = Column(Boolean, default=False)
+    status = Column(String, default="Pending")
+    priority = Column(String, default="Medium")
+    dueDate = Column(String, nullable=True)
