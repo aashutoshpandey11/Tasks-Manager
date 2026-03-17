@@ -9,7 +9,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# CORS (for React)
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
