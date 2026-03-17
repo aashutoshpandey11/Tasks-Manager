@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+const API_URL = "http://127.0.0.1:8000/tasks";
+
 const Dashboard = () => {
   const username = localStorage.getItem("user");
 
@@ -9,12 +11,7 @@ const Dashboard = () => {
     return <Navigate to="/" />;
   }
 
-  // Load tasks from localStorage
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("tasks");
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState({
     title: "",
     status: "Pending",
@@ -22,14 +19,24 @@ const Dashboard = () => {
     dueDate: ""
   });
 
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  // Save tasks to localStorage whenever updated
+  // ✅ Load tasks from backend
+  const fetchTasks = async () => {
+    try {
+      const res = await fetch(`${API_URL}/`);
+      const data = await res.json();
+      setTasks(data);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    fetchTasks();
+  }, []);
 
-  // Handle input
+  // ✅ Handle input
   const handleChange = (e) => {
     setTaskInput({
       ...taskInput,
@@ -37,50 +44,62 @@ const Dashboard = () => {
     });
   };
 
-  // Add or update task
-  const handleAddOrUpdateTask = () => {
+  // ✅ Add or Update task
+  const handleAddOrUpdateTask = async () => {
     if (!taskInput.title.trim()) return;
 
-    if (editIndex !== null) {
-      const updated = [...tasks];
-      updated[editIndex] = taskInput;
-      setTasks(updated);
-      setEditIndex(null);
-    } else {
-      setTasks([...tasks, taskInput]);
-    }
+    try {
+      if (editId) {
+        // UPDATE
+        await fetch(`${API_URL}/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(taskInput)
+        });
+      } else {
+        // CREATE
+        await fetch(`${API_URL}/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(taskInput)
+        });
+      }
 
-    setTaskInput({
-      title: "",
-      status: "Pending",
-      priority: "Medium",
-      dueDate: ""
-    });
-  };
+      fetchTasks(); // refresh list
 
-  // Delete
-  const handleDelete = (index) => {
-    const updated = tasks.filter((_, i) => i !== index);
-    setTasks(updated);
-
-    if (editIndex === index) {
-      setEditIndex(null);
       setTaskInput({
         title: "",
         status: "Pending",
         priority: "Medium",
         dueDate: ""
       });
+
+      setEditId(null);
+    } catch (error) {
+      console.error("Error saving task:", error);
     }
   };
 
-  // Edit
-  const handleEdit = (index) => {
-    setTaskInput(tasks[index]);
-    setEditIndex(index);
+  // ✅ Delete
+  const handleDelete = async (id) => {
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: "DELETE"
+      });
+
+      fetchTasks();
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
   };
 
-  // Logout
+  // ✅ Edit
+  const handleEdit = (task) => {
+    setTaskInput(task);
+    setEditId(task.id);
+  };
+
+  // ✅ Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     window.location.href = "/";
@@ -128,7 +147,7 @@ const Dashboard = () => {
       <div className="card shadow border-0 mb-4">
         <div className="card-body">
           <h5 className="mb-3">
-            {editIndex !== null ? "✏️ Edit Task" : "➕ Create New Task"}
+            {editId ? "✏️ Edit Task" : "➕ Create New Task"}
           </h5>
 
           <div className="row g-3">
@@ -182,11 +201,9 @@ const Dashboard = () => {
             <div className="col-md-2">
               <button
                 onClick={handleAddOrUpdateTask}
-                className={`btn w-100 ${
-                  editIndex !== null ? "btn-warning" : "btn-success"
-                }`}
+                className={`btn w-100 ${editId ? "btn-warning" : "btn-success"}`}
               >
-                {editIndex !== null ? "Update" : "Add"}
+                {editId ? "Update" : "Add"}
               </button>
             </div>
           </div>
@@ -212,37 +229,33 @@ const Dashboard = () => {
             <tbody>
               {tasks.length === 0 ? (
                 <tr>
-                  <td colSpan="5">No tasks created</td>
+                  <td colSpan="5">No tasks found</td>
                 </tr>
               ) : (
-                tasks.map((task, index) => (
-                  <tr key={index}>
+                tasks.map((task) => (
+                  <tr key={task.id}>
                     <td>{task.title}</td>
 
                     <td>
-                      <span
-                        className={`badge ${
-                          task.status === "Completed"
-                            ? "bg-success"
-                            : task.status === "In Progress"
-                            ? "bg-warning text-dark"
-                            : "bg-secondary"
-                        }`}
-                      >
+                      <span className={`badge ${
+                        task.status === "Completed"
+                          ? "bg-success"
+                          : task.status === "In Progress"
+                          ? "bg-warning text-dark"
+                          : "bg-secondary"
+                      }`}>
                         {task.status}
                       </span>
                     </td>
 
                     <td>
-                      <span
-                        className={`badge ${
-                          task.priority === "High"
-                            ? "bg-danger"
-                            : task.priority === "Medium"
-                            ? "bg-primary"
-                            : "bg-info text-dark"
-                        }`}
-                      >
+                      <span className={`badge ${
+                        task.priority === "High"
+                          ? "bg-danger"
+                          : task.priority === "Medium"
+                          ? "bg-primary"
+                          : "bg-info text-dark"
+                      }`}>
                         {task.priority}
                       </span>
                     </td>
@@ -252,14 +265,14 @@ const Dashboard = () => {
                     <td>
                       <button
                         className="btn btn-sm btn-outline-primary me-2"
-                        onClick={() => handleEdit(index)}
+                        onClick={() => handleEdit(task)}
                       >
                         Edit
                       </button>
 
                       <button
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(index)}
+                        onClick={() => handleDelete(task.id)}
                       >
                         Delete
                       </button>
@@ -268,6 +281,7 @@ const Dashboard = () => {
                 ))
               )}
             </tbody>
+
           </table>
         </div>
       </div>
