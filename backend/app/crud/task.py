@@ -19,11 +19,11 @@ def delete_task(db: Session, task_id: int):
         db.commit()
     return task
 
-def update_task(db: Session, task_id: int, updated_task: TaskCreate):
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if task:
-        for key, value in updated_task.dict().items():
-            setattr(task, key, value)
+def update_task(db: Session, task_id: int, task: TaskCreate):
+    db_task = db.query(Task).filter(Task.id == task_id).first()
+    if db_task:
+        for key, value in task.dict().items():
+            setattr(db_task, key, value)
         db.commit()
-        db.refresh(task)
-    return task
+        db.refresh(db_task)
+    return db_task
