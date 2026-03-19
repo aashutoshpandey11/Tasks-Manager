@@ -8,7 +8,7 @@ class TaskBase(BaseModel):
     priority: str
     dueDate: Optional[date] = None  # allow null
 
-    # 🔥 Validator to convert empty string to None
+    # Validator to fix empty strings
     @validator('dueDate', pre=True)
     def empty_string_to_none(cls, v):
         if v == "":
