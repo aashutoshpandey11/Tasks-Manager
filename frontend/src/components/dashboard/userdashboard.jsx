@@ -21,14 +21,13 @@ const Dashboard = () => {
 
   const [editId, setEditId] = useState(null);
 
-  // ✅ Load tasks from backend
   const fetchTasks = async () => {
     try {
       const res = await fetch(`${API_URL}/`);
       const data = await res.json();
       setTasks(data);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
+      console.error(err);
     }
   };
 
@@ -36,7 +35,6 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
-  // ✅ Handle input
   const handleChange = (e) => {
     setTaskInput({
       ...taskInput,
@@ -44,20 +42,17 @@ const Dashboard = () => {
     });
   };
 
-  // ✅ Add or Update task
   const handleAddOrUpdateTask = async () => {
     if (!taskInput.title.trim()) return;
 
     try {
       if (editId) {
-        // UPDATE
         await fetch(`${API_URL}/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(taskInput)
         });
       } else {
-        // CREATE
         await fetch(`${API_URL}/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -65,92 +60,103 @@ const Dashboard = () => {
         });
       }
 
-      fetchTasks(); // refresh list
-
+      fetchTasks();
       setTaskInput({
         title: "",
         status: "Pending",
         priority: "Medium",
         dueDate: ""
       });
-
       setEditId(null);
     } catch (error) {
-      console.error("Error saving task:", error);
+      console.error(error);
     }
   };
 
-  // ✅ Delete
   const handleDelete = async (id) => {
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: "DELETE"
-      });
-
-      fetchTasks();
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    fetchTasks();
   };
 
-  // ✅ Edit
   const handleEdit = (task) => {
     setTaskInput(task);
     setEditId(task.id);
   };
 
-  // ✅ Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     window.location.href = "/";
   };
 
   return (
-    <div className="container-fluid bg-light min-vh-100 p-4">
+    <div className="d-flex" style={{ minHeight: "100vh", background: "#0f172a", color: "#e2e8f0" }}>
+      
+      {/* SIDEBAR */}
+      <div style={{
+        width: "220px",
+        background: "#1e293b",
+        padding: "20px"
+      }}>
+        <h4 className="text-white">Task Manager</h4>
+        <hr style={{ borderColor: "#334155" }} />
 
-      {/* Header */}
-      <div className="bg-dark text-white p-4 rounded shadow mb-4 d-flex justify-content-between align-items-center">
-        <div>
-          <h3 className="mb-1">Dashboard</h3>
-          <p className="mb-0">Welcome back, <strong>{username}</strong> 👋</p>
-        </div>
-        <button className="btn btn-outline-light" onClick={handleLogout}>
-          Logout
-        </button>
+        <p className="mt-4">Dashboard</p>
+        <p>Tasks</p>
       </div>
 
-      {/* Stats */}
-      <div className="row mb-4">
-        <div className="col-md-4">
-          <div className="card shadow-sm border-0 text-center p-3">
-            <h6>Total Tasks</h6>
-            <h3>{tasks.length}</h3>
+      {/* MAIN CONTENT */}
+      <div className="flex-grow-1 p-4">
+
+        {/* HEADER */}
+        <div style={{
+          background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+          padding: "20px",
+          borderRadius: "15px",
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between"
+        }}>
+          <div>
+            <h4>Dashboard</h4>
+            <p>Welcome back, <strong>{username}</strong> 👋</p>
           </div>
+          <button className="btn btn-light" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
 
-        <div className="col-md-4">
-          <div className="card shadow-sm border-0 text-center p-3">
-            <h6>Completed</h6>
-            <h3>{tasks.filter(t => t.status === "Completed").length}</h3>
-          </div>
+        {/* STATS */}
+        <div className="row mb-4">
+          {[
+            { title: "Total Tasks", value: tasks.length },
+            { title: "Completed", value: tasks.filter(t => t.status === "Completed").length },
+            { title: "Pending", value: tasks.filter(t => t.status !== "Completed").length }
+          ].map((item, index) => (
+            <div className="col-md-4" key={index}>
+              <div style={{
+                background: "#1e293b",
+                padding: "20px",
+                borderRadius: "15px",
+                textAlign: "center",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+              }}>
+                <h6>{item.title}</h6>
+                <h3>{item.value}</h3>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="col-md-4">
-          <div className="card shadow-sm border-0 text-center p-3">
-            <h6>Pending</h6>
-            <h3>{tasks.filter(t => t.status !== "Completed").length}</h3>
-          </div>
-        </div>
-      </div>
+        {/* FORM */}
+        <div style={{
+          background: "#1e293b",
+          padding: "20px",
+          borderRadius: "15px",
+          marginBottom: "20px"
+        }}>
+          <h5>{editId ? "Edit Task" : "Create Task"}</h5>
 
-      {/* Form */}
-      <div className="card shadow border-0 mb-4">
-        <div className="card-body">
-          <h5 className="mb-3">
-            {editId ? "✏️ Edit Task" : "➕ Create New Task"}
-          </h5>
-
-          <div className="row g-3">
+          <div className="row g-3 mt-2">
             <div className="col-md-3">
               <input
                 type="text"
@@ -163,12 +169,7 @@ const Dashboard = () => {
             </div>
 
             <div className="col-md-2">
-              <select
-                name="status"
-                value={taskInput.status}
-                onChange={handleChange}
-                className="form-select"
-              >
+              <select name="status" value={taskInput.status} onChange={handleChange} className="form-select">
                 <option>Pending</option>
                 <option>In Progress</option>
                 <option>Completed</option>
@@ -176,12 +177,7 @@ const Dashboard = () => {
             </div>
 
             <div className="col-md-2">
-              <select
-                name="priority"
-                value={taskInput.priority}
-                onChange={handleChange}
-                className="form-select"
-              >
+              <select name="priority" value={taskInput.priority} onChange={handleChange} className="form-select">
                 <option>Low</option>
                 <option>Medium</option>
                 <option>High</option>
@@ -201,22 +197,31 @@ const Dashboard = () => {
             <div className="col-md-2">
               <button
                 onClick={handleAddOrUpdateTask}
-                className={`btn w-100 ${editId ? "btn-warning" : "btn-success"}`}
+                style={{
+                  background: "#3b82f6",
+                  border: "none",
+                  color: "white",
+                  width: "100%",
+                  borderRadius: "10px"
+                }}
+                className="btn"
               >
                 {editId ? "Update" : "Add"}
               </button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="card shadow border-0">
-        <div className="card-body">
-          <h5 className="mb-3">📋 Task List</h5>
+        {/* TABLE */}
+        <div style={{
+          background: "#1e293b",
+          padding: "20px",
+          borderRadius: "15px"
+        }}>
+          <h5>Task List</h5>
 
-          <table className="table align-middle text-center">
-            <thead className="table-dark">
+          <table className="table mt-3 text-center" style={{ color: "#e2e8f0" }}>
+            <thead style={{ background: "#334155" }}>
               <tr>
                 <th>Task</th>
                 <th>Status</th>
@@ -237,34 +242,18 @@ const Dashboard = () => {
                     <td>{task.title}</td>
 
                     <td>
-                      <span className={`badge ${
-                        task.status === "Completed"
-                          ? "bg-success"
-                          : task.status === "In Progress"
-                          ? "bg-warning text-dark"
-                          : "bg-secondary"
-                      }`}>
-                        {task.status}
-                      </span>
+                      <span className="badge bg-secondary">{task.status}</span>
                     </td>
 
                     <td>
-                      <span className={`badge ${
-                        task.priority === "High"
-                          ? "bg-danger"
-                          : task.priority === "Medium"
-                          ? "bg-primary"
-                          : "bg-info text-dark"
-                      }`}>
-                        {task.priority}
-                      </span>
+                      <span className="badge bg-info text-dark">{task.priority}</span>
                     </td>
 
                     <td>{task.dueDate || "N/A"}</td>
 
                     <td>
                       <button
-                        className="btn btn-sm btn-outline-primary me-2"
+                        className="btn btn-sm btn-outline-light me-2"
                         onClick={() => handleEdit(task)}
                       >
                         Edit
@@ -284,6 +273,7 @@ const Dashboard = () => {
 
           </table>
         </div>
+
       </div>
     </div>
   );
