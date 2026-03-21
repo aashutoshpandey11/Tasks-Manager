@@ -20,16 +20,23 @@ const Dashboard = () => {
   });
 
   const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // ✅ Fetch tasks
   const fetchTasks = async () => {
+    setLoading(true);
+    setErrorMsg('');
     try {
       const res = await fetch(`${API_URL}/`);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
       const data = await res.json();
-      console.log("Fetched tasks:", data);
       setTasks(data);
     } catch (err) {
-      console.error("Fetch error:", err);
+      setErrorMsg(`Failed to fetch tasks: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,17 +55,17 @@ const Dashboard = () => {
   // ✅ Add or Update Task (FIXED)
   const handleAddOrUpdateTask = async () => {
     if (!taskInput.title.trim()) {
-      alert("Task title is required");
+      setErrorMsg("Task title is required");
       return;
     }
+
+
 
     // 🔥 IMPORTANT FIX
     const payload = {
       ...taskInput,
       dueDate: taskInput.dueDate ? taskInput.dueDate : null
     };
-
-    console.log("Sending payload:", payload);
 
     try {
       let res;
@@ -79,14 +86,18 @@ const Dashboard = () => {
 
       // ✅ Check response
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error("API Error:", errorData);
-        alert("Error saving task");
+        try {
+          const errorData = await res.json();
+          const msg = errorData.detail || errorData.msg || errorData.error || `HTTP ${res.status}`;
+          setErrorMsg(`Failed to save task: ${msg}`);
+        } catch {
+          setErrorMsg(`HTTP ${res.status}: ${res.statusText}`);
+        }
         return;
       }
 
       const data = await res.json();
-      console.log("Saved task:", data);
+      // Task saved
 
       // Refresh list
       fetchTasks();
@@ -102,21 +113,29 @@ const Dashboard = () => {
       setEditId(null);
 
     } catch (error) {
-      console.error("Save error:", error);
+      setErrorMsg(`Save error: ${error.message}`);
     }
   };
 
-  // ✅ Delete
+
   const handleDelete = async (id) => {
+    setLoading(true);
+    setErrorMsg('');
     try {
-      await fetch(`${API_URL}/${id}`, {
+      const res = await fetch(`${API_URL}/${id}`, {
         method: "DELETE"
       });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
       fetchTasks();
     } catch (error) {
-      console.error("Delete error:", error);
+      setErrorMsg(`Failed to delete task: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
+
 
   // ✅ Edit
   const handleEdit = (task) => {
@@ -199,7 +218,8 @@ const Dashboard = () => {
           <div className="col-md-2">
             <button
               onClick={handleAddOrUpdateTask}
-              className="btn btn-primary w-100"
+              disabled={loading}
+              className={`btn w-100 ${loading ? 'btn-secondary' : 'btn-primary'}`}
             >
               {editId ? "Update" : "Add"}
             </button>
@@ -207,11 +227,33 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {errorMsg && (
+        <div className="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+          {errorMsg}
+          <button 
+            type="button" 
+            className="btn-close" 
+            onClick={() => setErrorMsg('')}
+            aria-label="Close"
+          ></button>
+        </div>
+      )}
+
+      {loading && tasks.length === 0 && (
+        <div className="text-center py-5 mb-3">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading your tasks...</p>
+        </div>
+      )}
+
       {/* Table */}
       <div className="card p-3">
         <h5>Task List</h5>
 
         <table className="table mt-3">
+
           <thead>
             <tr>
               <th>Task</th>
@@ -223,10 +265,11 @@ const Dashboard = () => {
           </thead>
 
           <tbody>
-            {tasks.length === 0 ? (
+{(tasks.length === 0 && !loading) ? (
               <tr>
                 <td colSpan="5">No tasks found</td>
               </tr>
+
             ) : (
               tasks.map((task) => (
                 <tr key={task.id}>
@@ -246,6 +289,7 @@ const Dashboard = () => {
                     <button
                       className="btn btn-danger btn-sm"
                       onClick={() => handleDelete(task.id)}
+                      disabled={loading}
                     >
                       Delete
                     </button>
