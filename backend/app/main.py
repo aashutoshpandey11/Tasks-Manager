@@ -1,27 +1,18 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.database import engine, Base
-from app.api.routes import tasks
-
-# Create tables
-Base.metadata.create_all(bind=engine)
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Data model
+class User(BaseModel):
+    username: str
+    email: str
+    password: str
 
-# Routes
-app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
+# Fake database (for now)
+users = []
 
-# Root
-@app.get("/")
-def root():
-    return {"message": "API is running 🚀"}
+@app.post("/register")
+def register(user: User):
+    users.append(user)
+    return {"message": "User registered successfully"}
