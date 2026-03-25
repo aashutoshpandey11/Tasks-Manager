@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
+
+  // ✅ Error state
+  const [errors, setErrors] = useState({});
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -11,31 +14,33 @@ const Register = () => {
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
 
-    // Get existing users
+    const newErrors = {};
+
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // ✅ Username must be unique
-    const userExists = users.find((u) => u.username === username);
-    if (userExists) {
-      alert("Username already exists!");
-      return;
+    // ✅ Username check
+    if (users.find((u) => u.username === username)) {
+      newErrors.username = "Username already exists";
     }
 
     // ✅ Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert("Invalid email format!");
-      return;
+      newErrors.email = "Invalid email format";
     }
 
-    // ✅ Password validation (min 6, letter, number, symbol)
+    // ✅ Password validation
     const passwordRegex =
       /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{6,}$/;
 
     if (!passwordRegex.test(password)) {
-      alert(
-        "Password must be at least 6 characters and include letter, number, and symbol!"
-      );
+      newErrors.password =
+        "Min 6 chars, include letter, number & symbol";
+    }
+
+    // ❌ If errors exist → stop
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -45,8 +50,6 @@ const Register = () => {
     localStorage.setItem("users", JSON.stringify(users));
 
     alert("Registration successful!");
-
-    // ✅ Redirect to login page
     navigate("/");
   };
 
@@ -55,54 +58,68 @@ const Register = () => {
       {/* Header */}
       <div className="p-3 w-100 bg-white shadow-sm">
         <h5 className="m-0">
-          <span className="border-top border-dark me-2"></span>
-          Task <strong className="border-bottom border-dark">Manager</strong>
+          Task <strong>Manager</strong>
         </h5>
       </div>
 
-      {/* Center Section */}
+      {/* Form */}
       <div className="d-flex justify-content-center align-items-center flex-grow-1">
-        <div
-          className="card p-4 shadow"
-          style={{ width: "400px", borderRadius: "12px" }}
-        >
-          <h2 className="text-center mb-1">Sign up</h2>
-          <p className="text-center text-muted mb-4">
-            Create Your Account
-          </p>
+        <div className="card p-4 shadow" style={{ width: "400px" }}>
+          <h2 className="text-center mb-3">Sign up</h2>
 
           <form onSubmit={handleRegister}>
-            <div className="mb-4">
+            {/* Username */}
+            <div className="mb-3">
               <input
                 type="text"
                 name="username"
-                className="form-control border-0 border-bottom rounded-0"
+                className={`form-control ${
+                  errors.username ? "is-invalid" : ""
+                }`}
                 placeholder="Username"
-                required
               />
+              {errors.username && (
+                <div className="text-danger small">
+                  {errors.username}
+                </div>
+              )}
             </div>
 
-            <div className="mb-4">
+            {/* Email */}
+            <div className="mb-3">
               <input
-                type="email"
+                type="text"
                 name="email"
-                className="form-control border-0 border-bottom rounded-0"
+                className={`form-control ${
+                  errors.email ? "is-invalid" : ""
+                }`}
                 placeholder="Email"
-                required
               />
+              {errors.email && (
+                <div className="text-danger small">
+                  {errors.email}
+                </div>
+              )}
             </div>
 
-            <div className="mb-4">
+            {/* Password */}
+            <div className="mb-3">
               <input
                 type="password"
                 name="password"
-                className="form-control border-0 border-bottom rounded-0"
+                className={`form-control ${
+                  errors.password ? "is-invalid" : ""
+                }`}
                 placeholder="Password"
-                required
               />
+              {errors.password && (
+                <div className="text-danger small">
+                  {errors.password}
+                </div>
+              )}
             </div>
 
-            <button type="submit" className="btn btn-primary w-100 mb-3">
+            <button className="btn btn-primary w-100">
               Sign up
             </button>
           </form>
@@ -111,11 +128,9 @@ const Register = () => {
 
       {/* Footer */}
       <div className="text-center mb-3">
-        <span className="text-muted">
+        <span>
           Already have an account?{" "}
-          <Link to="/" style={{ textDecoration: "none" }}>
-            Sign in
-          </Link>
+          <Link to="/">Sign in</Link>
         </span>
       </div>
     </div>
