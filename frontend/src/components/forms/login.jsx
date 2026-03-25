@@ -29,7 +29,7 @@ const Login = () => {
     alert("Login successful!");
 
     // ✅ Redirect to dashboard
-    navigate("/dashboard");
+    navigate("./dashboard/userdashboard");
   };
 
   return (
