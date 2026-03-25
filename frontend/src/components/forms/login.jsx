@@ -3,20 +3,32 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const navigate = useNavigate(); // for redirect
+  const navigate = useNavigate();
 
   const handleLogin = (e) => {
-    e.preventDefault(); // prevent page reload
+    e.preventDefault();
 
-    // Get form values
-    const username = e.target.username.value;
+    const username = e.target.username.value.trim();
     const password = e.target.password.value;
 
-    // Normally, you'd validate login via backend
-    // For now, just store username in localStorage
-    localStorage.setItem("user", username);
+    const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // Redirect to dashboard
+    // ✅ Check user credentials
+    const validUser = users.find(
+      (u) => u.username === username && u.password === password
+    );
+
+    if (!validUser) {
+      alert("Invalid username or password!");
+      return;
+    }
+
+    // ✅ Save logged in user
+    localStorage.setItem("loggedInUser", username);
+
+    alert("Login successful!");
+
+    // ✅ Redirect to dashboard
     navigate("/dashboard");
   };
 
@@ -37,13 +49,12 @@ const Login = () => {
           Enter your login credentials
         </p>
 
-        {/* Updated form with onSubmit */}
         <form onSubmit={handleLogin}>
           <div className="mb-3">
             <label className="form-label">Username:</label>
             <input
               type="text"
-              name="username" // added name for form access
+              name="username"
               className="form-control"
               placeholder="Enter your Username"
               required
@@ -54,7 +65,7 @@ const Login = () => {
             <label className="form-label">Password:</label>
             <input
               type="password"
-              name="password" // added name for form access
+              name="password"
               className="form-control"
               placeholder="Enter your Password"
               required
