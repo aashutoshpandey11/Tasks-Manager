@@ -27,9 +27,9 @@ const Login = () => {
     // ✅ Clear error if login successful
     setError("");
 
-    localStorage.setItem("loggedInUser", username);
+    localStorage.setItem("user", username);
 
-    navigate("./dashboard/userdashboard");
+    navigate("/dashboard");
   };
 
   return (
