@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
+
+  const [error, setError] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -13,22 +15,20 @@ const Login = () => {
 
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // ✅ Check user credentials
     const validUser = users.find(
       (u) => u.username === username && u.password === password
     );
 
     if (!validUser) {
-      alert("Invalid username or password!");
+      setError("Invalid username or password!");
       return;
     }
 
-    // ✅ Save logged in user
+    // ✅ Clear error if login successful
+    setError("");
+
     localStorage.setItem("loggedInUser", username);
 
-    alert("Login successful!");
-
-    // ✅ Redirect to dashboard
     navigate("./dashboard/userdashboard");
   };
 
@@ -50,26 +50,31 @@ const Login = () => {
         </p>
 
         <form onSubmit={handleLogin}>
+          {/* Username */}
           <div className="mb-3">
             <label className="form-label">Username:</label>
             <input
               type="text"
               name="username"
-              className="form-control"
+              className={`form-control ${error ? "is-invalid" : ""}`}
               placeholder="Enter your Username"
               required
             />
           </div>
 
+          {/* Password */}
           <div className="mb-3">
             <label className="form-label">Password:</label>
             <input
               type="password"
               name="password"
-              className="form-control"
+              className={`form-control ${error ? "is-invalid" : ""}`}
               placeholder="Enter your Password"
               required
             />
+
+            {/* ✅ Error message under password */}
+            {error && <div className="invalid-feedback">{error}</div>}
           </div>
 
           <button
