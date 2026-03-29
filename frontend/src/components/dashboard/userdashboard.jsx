@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_URL = "http://127.0.0.1:8000/tasks";
+const API_URL = "http://127.0.0.1:8000/tasks/";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
+  // ✅ FIXED: match login key
   const username = localStorage.getItem("user");
 
   if (!username) {
@@ -21,13 +24,14 @@ const Dashboard = () => {
 
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
 
+  // ✅ Fetch tasks
   const fetchTasks = async () => {
     setLoading(true);
-    setErrorMsg('');
+    setErrorMsg("");
     try {
-      const res = await fetch(`${API_URL}/`);
+      const res = await fetch(API_URL);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
@@ -52,57 +56,49 @@ const Dashboard = () => {
     });
   };
 
-  // ✅ Add or Update Task (FIXED)
+  // ✅ Add or Update Task
   const handleAddOrUpdateTask = async () => {
     if (!taskInput.title.trim()) {
       setErrorMsg("Task title is required");
       return;
     }
 
-
-
-    // 🔥 IMPORTANT FIX
     const payload = {
       ...taskInput,
-      dueDate: taskInput.dueDate ? taskInput.dueDate : null
+      dueDate: taskInput.dueDate || null
     };
 
     try {
       let res;
 
       if (editId) {
-        res = await fetch(`${API_URL}/${editId}`, {
+        res = await fetch(`${API_URL}${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
       } else {
-        res = await fetch(`${API_URL}/`, {
+        res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
       }
 
-      // ✅ Check response
       if (!res.ok) {
-        try {
-          const errorData = await res.json();
-          const msg = errorData.detail || errorData.msg || errorData.error || `HTTP ${res.status}`;
-          setErrorMsg(`Failed to save task: ${msg}`);
-        } catch {
-          setErrorMsg(`HTTP ${res.status}: ${res.statusText}`);
-        }
+        const errorData = await res.json().catch(() => ({}));
+        const msg =
+          errorData.detail ||
+          errorData.msg ||
+          errorData.error ||
+          `HTTP ${res.status}`;
+        setErrorMsg(`Failed to save task: ${msg}`);
         return;
       }
 
-      const data = await res.json();
-      // Task saved
-
-      // Refresh list
+      // ✅ Refresh + reset
       fetchTasks();
 
-      // Reset form
       setTaskInput({
         title: "",
         status: "Pending",
@@ -111,23 +107,25 @@ const Dashboard = () => {
       });
 
       setEditId(null);
-
+      setErrorMsg("");
     } catch (error) {
       setErrorMsg(`Save error: ${error.message}`);
     }
   };
 
-
+  // ✅ Delete
   const handleDelete = async (id) => {
     setLoading(true);
-    setErrorMsg('');
+    setErrorMsg("");
     try {
-      const res = await fetch(`${API_URL}/${id}`, {
+      const res = await fetch(`${API_URL}${id}`, {
         method: "DELETE"
       });
+
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
+
       fetchTasks();
     } catch (error) {
       setErrorMsg(`Failed to delete task: ${error.message}`);
@@ -136,28 +134,28 @@ const Dashboard = () => {
     }
   };
 
-
-  // ✅ Edit
+  // ✅ Edit (safe mapping)
   const handleEdit = (task) => {
     setTaskInput({
-      ...task,
+      title: task.title,
+      status: task.status,
+      priority: task.priority,
       dueDate: task.dueDate || ""
     });
     setEditId(task.id);
   };
 
-  // ✅ Logout
+  // ✅ Logout (React way)
   const handleLogout = () => {
     localStorage.removeItem("user");
-    window.location.href = "/";
+    navigate("/");
   };
 
   return (
     <div className="container mt-4">
-
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3>Welcome To The DashBoard, {username}</h3>
+        <h3>Welcome To The Dashboar, {username}</h3>
         <button className="btn btn-danger" onClick={handleLogout}>
           Logout
         </button>
@@ -219,7 +217,9 @@ const Dashboard = () => {
             <button
               onClick={handleAddOrUpdateTask}
               disabled={loading}
-              className={`btn w-100 ${loading ? 'btn-secondary' : 'btn-primary'}`}
+              className={`btn w-100 ${
+                loading ? "btn-secondary" : "btn-primary"
+              }`}
             >
               {editId ? "Update" : "Add"}
             </button>
@@ -227,23 +227,22 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Error */}
       {errorMsg && (
-        <div className="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+        <div className="alert alert-danger alert-dismissible fade show mb-3">
           {errorMsg}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setErrorMsg('')}
-            aria-label="Close"
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setErrorMsg("")}
           ></button>
         </div>
       )}
 
+      {/* Loading */}
       {loading && tasks.length === 0 && (
         <div className="text-center py-5 mb-3">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <div className="spinner-border text-primary"></div>
           <p className="mt-2">Loading your tasks...</p>
         </div>
       )}
@@ -253,7 +252,6 @@ const Dashboard = () => {
         <h5>Task List</h5>
 
         <table className="table mt-3">
-
           <thead>
             <tr>
               <th>Task</th>
@@ -265,11 +263,10 @@ const Dashboard = () => {
           </thead>
 
           <tbody>
-{(tasks.length === 0 && !loading) ? (
+            {tasks.length === 0 && !loading ? (
               <tr>
                 <td colSpan="5">No tasks found</td>
               </tr>
-
             ) : (
               tasks.map((task) => (
                 <tr key={task.id}>
@@ -277,7 +274,6 @@ const Dashboard = () => {
                   <td>{task.status}</td>
                   <td>{task.priority}</td>
                   <td>{task.dueDate || "N/A"}</td>
-
                   <td>
                     <button
                       className="btn btn-warning btn-sm me-2"
@@ -298,7 +294,6 @@ const Dashboard = () => {
               ))
             )}
           </tbody>
-
         </table>
       </div>
     </div>
